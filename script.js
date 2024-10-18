@@ -1,15 +1,32 @@
-let players = [];
-let matches = [];
+let players = [];  // Store players as they are added
 
-// Function to add a player to the tournament
-function addPlayer() {
-    const playerName = document.getElementById('playerName').value;
-    if (playerName.trim()) {
-        players.push({ name: playerName });
-        document.getElementById('playerName').value = '';  // Clear the input
-        updatePlayerList();  // Update the player list display
+// Function to add a player by sending a POST request to the backend
+function addPlayer(event) {
+    event.preventDefault();  // Prevent form from submitting normally
+
+    const playerName = document.getElementById('playerName').value;  // Get player name from input
+
+    // Check if we already have 8 players
+    if (players.length < 8) {
+        // Send POST request to Django backend to add player
+        fetch('http://127.0.0.1:8000/api/players/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: playerName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            players.push(data);  // Add the new player returned by the API
+            document.getElementById('playerName').value = '';  // Clear input field
+            updatePlayerList();
+
+            if (players.length === 8) {
+                generateTournamentBracket();  // Generate bracket once 8 players are added
+            }
+        })
+        .catch(error => console.error('Error adding player:', error));
     } else {
-        alert('Player name cannot be empty!');
+        alert('You can only add 8 players.');
     }
 }
 
@@ -18,76 +35,78 @@ function updatePlayerList() {
     const playersList = document.getElementById('playersList');
     playersList.innerHTML = '';  // Clear the existing list
 
-    players.forEach((player, index) => {
+    players.forEach(player => {
         const li = document.createElement('li');
         li.textContent = player.name;
         playersList.appendChild(li);
     });
+
+    // Disable the "Add Player" button if 8 players are added
+    document.getElementById('addPlayerBtn').disabled = players.length >= 8;
 }
 
-// Function to generate round-robin matches
-function generateMatches() {
-    if (players.length < 2) {
-        alert('You need at least 2 players to generate matches.');
-        return;
-    }
+// Function to generate the tournament bracket for 8 players
+function generateTournamentBracket() {
+    // Show the bracket section
+    document.getElementById('bracket-section').style.display = 'block';
 
-    matches = [];  // Clear any existing matches
+    // Assign players to the matches in Round 1
+    const match1 = { player1: players[0].id, player2: players[1].id };
+    const match2 = { player1: players[2].id, player2: players[3].id };
+    const match3 = { player1: players[4].id, player2: players[5].id };
+    const match4 = { player1: players[6].id, player2: players[7].id };
 
-    // Create a round-robin match schedule (every player plays against every other player)
-    for (let i = 0; i < players.length; i++) {
-        for (let j = i + 1; j < players.length; j++) {
-            matches.push({
-                player1: players[i].name,
-                player2: players[j].name,
-                winner: null
-            });
-        }
-    }
+    // Create the games for each match by sending a POST request to the backend
+    createGame(match1);
+    createGame(match2);
+    createGame(match3);
+    createGame(match4);
 
-    updateMatchList();  // Update the match display
+    // Pop-up notification to inform user that the bracket is generated
+    alert('Player registration complete! The tournament bracket has been generated.');
 }
 
-// Function to update the match list display
-function updateMatchList() {
-    const matchesList = document.getElementById('matchesList');
-    matchesList.innerHTML = '';  // Clear the existing match list
+// Function to create a game by sending a POST request to the backend   
+function createGame(match) {
+    fetch('http://127.0.0.1:8000/api/games/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(match)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Game created:', data);  // Game creation response
+    })
+    .catch(error => console.error('Error creating game:', error));
+}
+// Function to set the winner of a game
+function setWinner(gameId) {
+    const winnerId = prompt('Enter the winner player ID:');
+    const score1 = prompt('Enter score for Player 1:');
+    const score2 = prompt('Enter score for Player 2:');
 
-    matches.forEach((match, index) => {
-        const row = document.createElement('tr');
-
-        const player1Cell = document.createElement('td');
-        player1Cell.textContent = match.player1;
-        row.appendChild(player1Cell);
-
-        const player2Cell = document.createElement('td');
-        player2Cell.textContent = match.player2;
-        row.appendChild(player2Cell);
-
-        const winnerCell = document.createElement('td');
-        winnerCell.textContent = match.winner ? match.winner : 'Not decided';
-        row.appendChild(winnerCell);
-
-        const actionCell = document.createElement('td');
-        const selectWinnerButton = document.createElement('button');
-        selectWinnerButton.textContent = 'Select Winner';
-        selectWinnerButton.onclick = () => selectWinner(index);
-        actionCell.appendChild(selectWinnerButton);
-        row.appendChild(actionCell);
-
-        matchesList.appendChild(row);
-    });
+    fetch(`http://127.0.0.1:8000/api/games/${gameId}/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            winner: winnerId,
+            score_player1: score1,
+            score_player2: score2,
+            is_complete: true
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Game updated:', data);
+        // Update the frontend display with new scores and winner
+        document.getElementById(`match${gameId}-score1`).textContent = score1;
+        document.getElementById(`match${gameId}-score2`).textContent = score2;
+    })
+    .catch(error => console.error('Error updating game:', error));
 }
 
-// Function to select a winner for a match
-function selectWinner(matchIndex) {
-    const match = matches[matchIndex];
-    const winner = prompt(`Enter the winner (either "${match.player1}" or "${match.player2}"):`);
 
-    if (winner === match.player1 || winner === match.player2) {
-        matches[matchIndex].winner = winner;
-        updateMatchList();  // Update the display after setting the winner
-    } else {
-        alert('Invalid winner! Please enter the correct player name.');
-    }
+// Fetch players and matches when the page loads (optional)
+window.onload = function() {
+    // Optionally, you can load existing players from the backend if needed
 }

@@ -3,100 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ping Pong Tournament</title>
+    <title>8-Player Tournament</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-
-        h1 {
-            text-align: center;
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            box-sizing: border-box;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f4f4f4;
-        }
-
-        .match {
-            margin-bottom: 20px;
-        }
-
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #218838;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: white; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        h1 { text-align: center; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; }
+        table, th, td { border: 1px solid #ddd; }
+        th, td { padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        button { background-color: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Ping Pong Tournament</h1>
-    
+    <h1>8-Player Tournament</h1>
+
+    <!-- Player Management Section -->
     <div id="players-section">
-        <h2>Add Players</h2>
-        <input type="text" id="playerName" placeholder="Enter player name">
-        <button onclick="addPlayer()">Add Player</button>
+        <h2>Add Players (Max 8 Players)</h2>
+        <form id="playerForm" onsubmit="addPlayer(event)">
+            <input type="text" id="playerName" placeholder="Enter player name" required>
+            <button type="submit" id="addPlayerBtn">Add Player</button>
+        </form>
 
         <h3>Players</h3>
         <ul id="playersList"></ul>
     </div>
 
-    <div id="matches-section">
-        <h2>Schedule a Match</h2>
+    <!-- Bracket Section for 8 Players -->
+    <div id="bracket-section" style="display:none;">
+        <h2>Tournament Bracket</h2>
 
-        <!-- Add the matchmaking button here -->
-        <button onclick="generateMatches()">Generate Matches (Round Robin)</button>
+        <h3>Round 1</h3>
+        <table>
+            <tr>
+                <td id="match1-player1">Player 1</td>
+                <td>vs</td>
+                <td id="match1-player2">Player 2</td>
+                <td>
+                    <span id="match1-score1">0</span> - <span id="match1-score2">0</span>
+                </td>
+                <td>
+                    <button onclick="setWinner(1)">Set Winner</button>
+                </td>
+            </tr>
+            <tr>
+                <td id="match2-player1">Player 3</td>
+                <td>vs</td>
+                <td id="match2-player2">Player 4</td>
+                <td>
+                    <span id="match2-score1">0</span> - <span id="match2-score2">0</span>
+                </td>
+                <td>
+                    <button onclick="setWinner(2)">Set Winner</button>
+                </td>
+            </tr>
+            <tr>
+                <td id="match3-player1">Player 5</td>
+                <td>vs</td>
+                <td id="match3-player2">Player 6</td>
+                <td>
+                    <span id="match3-score1">0</span> - <span id="match3-score2">0</span>
+                </td>
+                <td>
+                    <button onclick="setWinner(3)">Set Winner</button>
+                </td>
+            </tr>
+            <tr>
+                <td id="match4-player1">Player 7</td>
+                <td>vs</td>
+                <td id="match4-player2">Player 8</td>
+                <td>
+                    <span id="match4-score1">0</span> - <span id="match4-score2">0</span>
+                </td>
+                <td>
+                    <button onclick="setWinner(4)">Set Winner</button>
+                </td>
+            </tr>
+        </table>
 
-        <h3>Matches</h3>
-        <table id="matchesTable">
-            <thead>
-                <tr>
-                    <th>Player 1</th>
-                    <th>Player 2</th>
-                    <th>Winner</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="matchesList"></tbody>
+        <h3>Round 2 (Semi-Finals)</h3>
+        <table>
+            <tr>
+                <td id="semi1-player1">Winner Match 1</td>
+                <td>vs</td>
+                <td id="semi1-player2">Winner Match 2</td>
+                <td></td>
+                <td><button onclick="setWinner(5)">Set Winner</button></td>
+            </tr>
+            <tr>
+                <td id="semi2-player1">Winner Match 3</td>
+                <td>vs</td>
+                <td id="semi2-player2">Winner Match 4</td>
+                <td></td>
+                <td><button onclick="setWinner(6)">Set Winner</button></td>
+            </tr>
+        </table>
+
+        <h3>Final</h3>
+        <table>
+            <tr>
+                <td id="final-player1">Winner Semi 1</td>
+                <td>vs</td>
+                <td id="final-player2">Winner Semi 2</td>
+                <td></td>
+                <td><button onclick="setWinner(7)">Set Winner</button></td>
+            </tr>
         </table>
     </div>
 </div>
